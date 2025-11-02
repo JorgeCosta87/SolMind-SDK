@@ -52,7 +52,7 @@ pub struct Initialize<'info> {
 }
 
 impl<'info> Initialize<'info> {
-    pub fn initialize(&mut self, base_yield_rate: u64, lock_durations: Vec<u32>, bumps: &InitializeBumps) -> Result<()>{
+    pub fn initialize(&mut self, base_yield_rate: u64, lock_durations: Vec<u64>, bumps: &InitializeBumps) -> Result<()>{
         self.stake_config.set_inner(StakeConfig {
             admin: self.admin.key(),
             deposit_mint: self.deposit_mint.key(),
