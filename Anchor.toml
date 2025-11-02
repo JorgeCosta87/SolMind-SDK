@@ -7,6 +7,7 @@ skip-lint = false
 
 [programs.localnet]
 sol_mind_sdk = "77dFMte18dpEJwG6N4VRr8qqHFYe3hXzbUU8q9KvQNhH"
+stake_vault ="77dFMte18dpEJwG6N4VRr8qqHFYe3hXzbUU8q9KvQNhH"
 
 [registry]
 url = "https://api.apr.dev"

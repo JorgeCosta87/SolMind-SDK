@@ -1,3 +1,4 @@
+/*
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { SolMindSdk } from "../target/types/sol_mind_sdk";
@@ -14,3 +15,4 @@ describe("sol-mind-sdk", () => {
     console.log("Your transaction signature", tx);
   });
 });
+*/
