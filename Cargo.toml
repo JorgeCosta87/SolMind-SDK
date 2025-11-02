@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/*"
+    "programs/sol-mind-sdk",
+    "programs/stake-vault",
 ]
 resolver = "2"
 
@@ -12,3 +13,7 @@ codegen-units = 1
 opt-level = 3
 incremental = false
 codegen-units = 1
+
+[workspace.dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+anchor-spl = "0.32.1"
