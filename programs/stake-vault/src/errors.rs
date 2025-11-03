@@ -6,4 +6,8 @@ pub enum StakeError {
     InsufficientFunds,
     #[msg("Invalid lock duration")]
     InvalidLockDuration,
+    #[msg("No yield accrued")]
+    NoYieldAccrued,
+    #[msg("Something went wrong")]
+    SomentingWentWrong,
 }

@@ -10,5 +10,6 @@ pub struct StakingPosition {
     pub unlock_slot: u64,
     pub last_claim_slot: u64,
     pub total_claimed: u64,
+    pub yield_rate: u64,
     pub bump: u8,
 }
