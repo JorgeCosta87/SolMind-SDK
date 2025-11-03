@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "programs/sol-mind-sdk",
+    "programs/token-manager",
     "programs/stake-vault",
 ]
 resolver = "2"
