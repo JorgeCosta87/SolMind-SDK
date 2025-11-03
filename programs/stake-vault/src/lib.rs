@@ -14,7 +14,7 @@ pub mod stake_vault {
 
     pub fn initialize(
         ctx: Context<Initialize>,
-        args:TokenMetadataArgs,
+        args: TokenMetadataArgs,
         base_yield_rate: u64,
         lock_durations: Vec<u64>,
 
@@ -29,5 +29,11 @@ pub mod stake_vault {
         lock_durations_days: u64
     ) -> Result<()>{
         ctx.accounts.stake_tokens(amount, lock_durations_days, &ctx.bumps)
+    }
+
+    pub fn claim(
+        ctx: Context<Claim>,
+    ) -> Result<()>{
+        ctx.accounts.claim()
     }
 }

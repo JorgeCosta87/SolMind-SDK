@@ -2,7 +2,6 @@ import * as anchor from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
 import { StakeVault } from "../target/types/stake_vault";
 import {
-  TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccount,
   mintTo,
@@ -13,7 +12,6 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
 import { expect } from "chai";
-import { PublicKey } from "@solana/web3.js";
 
 describe("stake-vault", () => {
   // Configure the client to use the local cluster.
@@ -63,6 +61,28 @@ describe("stake-vault", () => {
   const lockDuration = new BN(30);
   const stakeAmount = new BN(1_000_000_000);
 
+
+  async function sendDummyTxs(amount: number): Promise<void> {
+
+    for (let i = 0; i < amount; i++) {
+      const dummyTx = new anchor.web3.Transaction().add(
+        anchor.web3.SystemProgram.transfer({
+          fromPubkey: userKeypair.publicKey,
+          toPubkey: userKeypair.publicKey,
+          lamports: 0,
+        })
+      );
+      
+      await anchor.web3.sendAndConfirmTransaction(
+        provider.connection,
+        dummyTx,
+        [userKeypair],
+        { commitment: 'confirmed'}
+      ).catch(() => {});
+    }
+    
+  }
+
   it("Request airdrop to taker.", async () => {
 
   });
@@ -94,16 +114,6 @@ describe("stake-vault", () => {
       undefined,
       TOKEN_2022_PROGRAM_ID
     ));
-    /*
-    rewardMintUserAta = (await  createAssociatedTokenAccount(
-      provider.connection,
-      admin.payer,
-      rewardMintKeypair.publicKey,
-      provider.publicKey,
-      undefined,
-      TOKEN_2022_PROGRAM_ID
-    )); 
-    */
 
     await mintTo(
       provider.connection, userKeypair, depositMint, depositMintAta, admin.payer, mint_amount, undefined, undefined, TOKEN_2022_PROGRAM_ID
@@ -149,10 +159,18 @@ describe("stake-vault", () => {
     expect(rewardMintInfo.address.toBase58()).to.equal(rewardMintKeypair.publicKey.toBase58())
     expect(rewardMintInfo.decimals).to.equal(mint_decimals)
     expect(Number(rewardMintInfo.supply)).to.equal(0)
-    expect(rewardMintInfo.mintAuthority.toBase58()).to.equal(provider.publicKey.toBase58())
-    expect(rewardMintInfo.freezeAuthority.toBase58()).to.equal(provider.publicKey.toBase58())
+    expect(rewardMintInfo.mintAuthority.toBase58()).to.equal(stakeConfigPDA.toBase58())
+    expect(rewardMintInfo.freezeAuthority.toBase58()).to.equal(stakeConfigPDA.toBase58())
+  
+    rewardMintUserAta = (await  createAssociatedTokenAccount(
+      provider.connection,
+      userKeypair,
+      rewardMintKeypair.publicKey,
+      userKeypair.publicKey,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    )); 
   });
-
 
   it('Stake tokens', async () => {
     const tx = await program.methods
@@ -191,5 +209,57 @@ describe("stake-vault", () => {
     expect(Number(stakeConfig.totalPositions)).to.equal(1)
     expect(Number(stakePosition.amountStaked)).to.equal(Number(stakeAmount))
     expect(Number(stakeVaultAccount.amount)).to.equal(Number(stakeAmount));
+  });
+
+  it('Claim tokens', async () => {
+    console.log('sending 50 txs');
+    await sendDummyTxs(50);
+
+    const initialTotalClaimed = (await program.account.stakingPosition.fetch(stakePositionPDA)).totalClaimed;
+    const rewardAtaInitialAmount = (await getAccount(
+      provider.connection,
+      rewardMintUserAta,
+      'confirmed',
+      TOKEN_2022_PROGRAM_ID
+    )).amount;
+
+    const tx = await program.methods
+      .claim()
+      .accountsPartial({ 
+        user: userKeypair.publicKey,
+        rewardMint: rewardMintKeypair.publicKey,
+        rewardMintAta: rewardMintUserAta,
+        stakeConfig: stakeConfigPDA,
+        stakePosition: stakePositionPDA,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .transaction();
+
+    const signature = await anchor.web3.sendAndConfirmTransaction(
+      provider.connection,
+      tx,
+      [userKeypair]
+    );
+    console.log('Your transaction signature', signature);
+    await program.provider.connection.confirmTransaction(signature, 'confirmed');
+
+    const final_total_claimed = (await program.account.stakingPosition.fetch(stakePositionPDA)).totalClaimed;
+    const stakeVaultAccount = await getAccount(
+      provider.connection,
+      stakeVault,
+      'confirmed',
+      TOKEN_2022_PROGRAM_ID
+    );
+    const rewardAtaFinalAmount = (await getAccount(
+      provider.connection,
+      rewardMintUserAta,
+      'confirmed',
+      TOKEN_2022_PROGRAM_ID
+    )).amount;
+
+    expect(Number(final_total_claimed)).greaterThan(Number(initialTotalClaimed))
+    expect(Number(rewardAtaFinalAmount)).greaterThan(Number(rewardAtaInitialAmount))
   });
 });

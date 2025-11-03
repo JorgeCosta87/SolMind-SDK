@@ -8,8 +8,6 @@ use anchor_spl::{
         mint_to,
         TokenInterface,
         TokenAccount,
-        TransferChecked,
-        transfer_checked,
     }
 };
 
@@ -20,7 +18,10 @@ use crate::errors::StakeError;
 pub struct Claim<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mint::token_program = token_program)]
+    #[account(
+        mut,
+        mint::token_program = token_program
+    )]
     pub reward_mint: InterfaceAccount<'info, Mint>,
     #[account(
         mut,
@@ -50,12 +51,11 @@ pub struct Claim<'info> {
 }
 
 impl<'info> Claim<'info> {
-    pub fn stake_tokens(
+    pub fn claim(
         &mut self,
     ) -> Result<()> {
         let clock = Clock::get()?;
 
-        // Calculate slots since last claim
         let slots_since_claim = clock.slot
             .saturating_sub(self.stake_position.last_claim_slot);
         
@@ -64,7 +64,7 @@ impl<'info> Claim<'info> {
         let slots_per_day = 216_000u64;
         let slots_per_year = 365u64
             .checked_mul(slots_per_day)
-            .ok_or(StakeError::SomentingWentWrong)?; // 78,840,000 slots
+            .ok_or(StakeError::SomentingWentWrong)?;
         
         require!(slots_per_year > 0, StakeError::SomentingWentWrong);
  
@@ -82,22 +82,26 @@ impl<'info> Claim<'info> {
 
         let signer_seeds: [&[&[u8]]; 1] = [&[
             b"stake_config",
-            self.stake_config.to_account_info().key.as_ref(),
             self.stake_config.admin.as_ref(),
             &[self.stake_config.bump]
         ]];
 
         let reward_mint_accounts = MintTo  {
             mint: self.reward_mint.to_account_info(),
-            to: self.user.to_account_info(),
-            authority: self.stake_position.to_account_info()
+            to: self.reward_mint_ata.to_account_info(),
+            authority: self.stake_config.to_account_info()
         };
 
         let cpi_ctx = CpiContext::new_with_signer(
-            self.token_program.to_account_info(), reward_mint_accounts, &signer_seeds
+            self.token_program.to_account_info(),
+            reward_mint_accounts,
+            &signer_seeds
         );
 
         mint_to(cpi_ctx, yield_amount)?;
+
+        self.stake_position.last_claim_slot = clock.slot;
+        self.stake_position.total_claimed += yield_amount;
 
         Ok(())
     }

@@ -2,9 +2,17 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer};
 
 use anchor_spl::{
-    token_interface::{Mint, TokenInterface, TokenMetadataInitialize, token_metadata_initialize}
+    token_interface::{
+        Mint,
+        TokenInterface,
+        TokenMetadataInitialize,
+        token_metadata_initialize,
+        SetAuthority,
+        set_authority,
+    },
 };
 
+use spl_token_2022::instruction::AuthorityType;
 use spl_token_metadata_interface::state::TokenMetadata;
 use spl_type_length_value::variable_len_pack::VariableLenPack;
 
@@ -32,9 +40,9 @@ pub struct Initialize<'info> {
         init,
         payer = payer,
         mint::decimals = args.decimals,
-        mint::authority = stake_config,
-        mint::freeze_authority = stake_config,
-        extensions::metadata_pointer::authority = stake_config,
+        mint::authority = admin,
+        mint::freeze_authority = admin,
+        extensions::metadata_pointer::authority = admin,
         extensions::metadata_pointer::metadata_address = reward_mint,
     )]
     pub reward_mint: InterfaceAccount<'info, Mint>,
@@ -106,6 +114,30 @@ impl<'info> Initialize<'info> {
             args.name,
             args.symbol,
             args.uri,
+        )?;
+
+        set_authority(
+            CpiContext::new(
+                self.token_program.to_account_info(),
+                SetAuthority {
+                    current_authority: self.admin.to_account_info(),
+                    account_or_mint: self.reward_mint.to_account_info(),
+                },
+            ),
+            AuthorityType::MintTokens,
+            Some(self.stake_config.key()),
+        )?;
+
+        set_authority(
+            CpiContext::new(
+                self.token_program.to_account_info(),
+                SetAuthority {
+                    current_authority: self.admin.to_account_info(),
+                    account_or_mint: self.reward_mint.to_account_info(),
+                },
+            ),
+            AuthorityType::FreezeAccount,
+            Some(self.stake_config.key()),
         )?;
 
         Ok(())

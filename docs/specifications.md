@@ -45,17 +45,19 @@ In a typical game scenario:
 - Player receives game resource tokens as rewards (claimable in future)
 ---
 
-### US-003: Player Claims Game Resources (Planned)
+### US-003: Player Claims Game Resources
 **As a** player  
 **I want to** claim the game resources I've earned from staking  
 **So that** I can use them in-game or trade them
 
 **Acceptance Criteria:**
 - Player can claim accumulated resources based on stake time
-- Resources are transferred to player's wallet as Token 2022 tokens
-- Claim amount is calculated based on stake amount and time
+- Resources are minted to player's wallet as Token 2022 tokens
+- Claim amount is calculated based on stake amount, yield rate, and time elapsed
 - Claim updates `last_claim_slot` and `total_claimed` in position
 - Player can claim multiple times before unlock period ends
+- Yield calculation uses basis points (100 = 1% APY)
+- Formula: `yield = (amount_staked × yield_rate_bps × slots_elapsed) / (10000 × slots_per_year)`
 
 ---
 
@@ -92,39 +94,58 @@ In a typical game scenario:
 - `unlock_slot: u64` - Slot when tokens can be unstaked
 - `last_claim_slot: u64` - Last slot when rewards were claimed
 - `total_claimed: u64` - Total rewards claimed so far
+- `yield_rate: u64` - Yield rate in basis points
 - `bump: u8` - PDA bump seed
 
 ## Token 2022 Integration
 
-The system leverages Token 2022 program with the following features:
+The system uses Token 2022 program with the following features:
 
 ### Metadata Pointer Extension
 - Reward mint includes metadata pointer extension
 - Metadata is stored on-chain in TLV format
 - Includes name, symbol, and URI fields
 
-### Benefits
-- Rich metadata for reward tokens
-- On-chain token information
-- Compatible with Token 2022 ecosystem
-
 ## Lock Duration System
 
 - Lock durations are specified in days
 - Conversion: 216,000 Solana slots = 1 day
 - Users select from pre-configured duration options
-- Longer lock durations may provide higher yield rates (future enhancement)
+- Longer lock durations may provide higher yield rates (planned)
+
+## Yield Calculation
+
+Rewards are calculated using a basis points system with annual percentage yield:
+
+```
+yield = (amount_staked × yield_rate_bps × slots_elapsed) / (10000 × slots_per_year)
+```
+
+Where:
+- `amount_staked`: Tokens staked by the player
+- `yield_rate_bps`: Yield rate in basis points (100 = 1% APY, 500 = 5% APY)
+- `slots_elapsed`: Slots since last claim (or since staking if first claim)
+- `slots_per_year`: 365 × 216,000 = 78,840,000 slots
+
+### Example Calculation
+- Player stakes 1,000,000,000 tokens (1B with 9 decimals)
+- Yield rate: 100 bps (1% APY)
+- Time elapsed: 500 slots
+- Yield = (1e9 × 100 × 500) / (10000 × 78840000) ≈ 0.63 tokens
 
 ## Error Handling
 
 ### StakeError
 - `InsufficientFunds` - User doesn't have enough tokens to stake
 - `InvalidLockDuration` - Selected lock duration is not in allowed list
+- `NoYieldAccrued` - No yield has been earned yet (called claim too early or already up-to-date)
 
 ## Future Enhancements
 
-### Phase 1: Core Staking (In Progress)
-- [ ] Claim resources instruction
+### Phase 1: Core Staking ✅
+- [x] Initialize vault with resource mint
+- [x] Stake game tokens for resources
+- [x] Claim resources instruction
 - [ ] Unstake tokens instruction (after lock period)
 - [ ] Variable yield rates based on lock duration
 - [ ] Compound staking (re-stake earned resources)
