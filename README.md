@@ -12,19 +12,18 @@ A player stakes 1000 game tokens for 30 days and receives game resources (e.g., 
 ## Features
 
 ### Current (Stake Vault)
-- ✅ **Game Token Staking**: Players lock game tokens for specified durations
-- ✅ **Resource Generation**: Receive game resources as Token 2022 rewards
-- ✅ **Claim Resources**: Players can claim accrued rewards based on staking time and yield rate
-- ✅ **Token 2022 Integration**: Resource mints with metadata pointer extension
-- ✅ **Flexible Lock Periods**: Configurable lock duration options (15, 30, 90 days)
-- ✅ **On-Chain Tracking**: Individual staking positions tracked via PDAs
-- ✅ **Rich Metadata**: Game resources with name, symbol, URI, and custom attributes
+- **Game Token Staking**: Players lock game tokens for specified durations
+- **Resource Generation**: Receive game resources as Token 2022 rewards
+- **Claim Resources**: Players can claim accrued rewards based on staking time and yield rate
+- **Token 2022 Integration**: Resource mints with metadata pointer extension
+- **Flexible Lock Periods**: Configurable lock duration options (15, 30, 90 days)
+- **On-Chain Tracking**: Individual staking positions tracked via PDAs
 
 ### Planned (P2P Trading)
-- 🔄 **Peer-to-Peer Trading**: Direct player-to-player resource trading
-- 🔄 **Order Book System**: Create and fill trading orders
-- 🔄 **Marketplace Integration**: Seamless integration with game marketplaces
-- 🔄 **Escrow System**: Secure trading with automatic settlement
+- **Peer-to-Peer Trading**: Direct player-to-player resource trading
+- **Order Book System**: Create and fill trading orders
+- **Marketplace Integration**: Seamless integration with game marketplaces
+- **Escrow System**: Secure trading with automatic settlement
 
 ## Architecture
 
@@ -61,38 +60,45 @@ Individual player staking position:
 - Claim tracking (last_claim_slot, total_claimed)
 - Yield rate for reward calculations
 
-## Token 2022 Features
-
-The reward mint utilizes Token 2022 extensions:
-
-- **Metadata Pointer Extension**: On-chain metadata storage
-- **Rich Metadata**: Name, symbol, and URI fields
-- **Token Interface**: Compatible with Token 2022 ecosystem
 
 ## Getting Started
 
 ### Prerequisites
 
-- Rust 1.70+
-- Solana CLI 1.18+
-- Anchor 0.32+
-- Node.js 18+
+Install all necessary dependencies with one command:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+```
+
+This installs:
+- Rust
+- Solana CLI
+- Anchor CLI
+- Node.js
+- Yarn
+
 
 ### Installation
 
+1. **Clone repository**
 ```bash
-# Install Anchor
-cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
-avm install latest
-avm use latest
+git clone <repo-url>
+cd dev-quest
+```
 
-# Install dependencies
-yarn install
-
-# Build program
+2. **Build program**
+```bash
 anchor build
+```
 
-# Run tests
+3. **Deploy to devnet**
+```bash
+anchor deploy
+```
+
+4. **Run tests**
+```bash
 anchor test
 ```
 
@@ -101,15 +107,6 @@ anchor test
 - `InsufficientFunds`: User doesn't have enough tokens
 - `InvalidLockDuration`: Selected lock duration not in allowed list
 - `NoYieldAccrued`: No yield has been earned yet (claim called too early)
-
-## Development
-
-### Testing
-
-```bash
-# Run all tests
-anchor test
-```
 
 ## Documentation
 
