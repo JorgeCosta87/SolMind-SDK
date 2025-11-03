@@ -32,9 +32,9 @@ pub struct Initialize<'info> {
         init,
         payer = payer,
         mint::decimals = args.decimals,
-        mint::authority = admin,
-        mint::freeze_authority = admin,
-        extensions::metadata_pointer::authority = admin,
+        mint::authority = stake_config,
+        mint::freeze_authority = stake_config,
+        extensions::metadata_pointer::authority = stake_config,
         extensions::metadata_pointer::metadata_address = reward_mint,
     )]
     pub reward_mint: InterfaceAccount<'info, Mint>,

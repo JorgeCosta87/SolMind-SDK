@@ -96,6 +96,7 @@ impl<'info> StakeTokens<'info> {
                 .checked_add(lock_duration_slots).ok_or(StakeError::InvalidLockDuration)?,
                 last_claim_slot: clock.slot,
                 total_claimed: 0,
+                yield_rate: self.stake_config.base_yield_rate,
                 bump: bumps.stake_position,
             });
 
